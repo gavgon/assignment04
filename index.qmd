@@ -1,12 +1,19 @@
 ---
-title: "index.qmd"
+title: "Trends in California Wildfires, 1950–Present"
 author: "Gavin Gondalwala"
-format: html
+format:
+  html:
+    embed-resources: true
+execute:
+  warning: false
+  message: false
 editor: visual
-embed-resources: true
 editor_options: 
   chunk_output_type: console
 ---
+## Data
+
+This analysis uses CAL FIRE wildfire perimeter data compiled by [BuzzFeed News](https://github.com/BuzzFeedNews/2018-07-wildfire-trends/tree/master).
 
 ```{r}
 ## Visualization Requirements Checklist
@@ -15,23 +22,25 @@ editor_options:
 #| **Geom 1** | geom_line | 1 |
 #| **Geom 2** | geom_point | 1 |
 #| **Geom 3** | geom_smooth | 2 |
-#| **Geom 4** | | |
-#| **Geom 5** | | |
+#| **Geom 4** | geom_col | 3 |
+#| **Geom 5** | geom_bar | 4 |
 #| **Aesthetic 1** *(inside `aes()`)* | x = year | 1 |
 #| **Aesthetic 2** *(inside `aes()`)* | y = n_fires | 1 |
 #| **Aesthetic 3** *(inside `aes()`)* | label = n_fires | 1 |
-#| **Aesthetic 4** *(inside `aes()`)* | | |
-#| **Aesthetic 5** *(inside `aes()`)* | | |
-#| **Aesthetic 6** *(inside `aes()`)* | | |
+#| **Aesthetic 4** *(inside `aes()`)* | reorder(cause_label, acres) | 3 |
+#| **Aesthetic 5** *(inside `aes()`)* | fill = month | 4 |
+#| **Aesthetic 6** *(inside `aes()`)* | color = acres | 2 |
 #| **Non-Aesthetic 1** *(outside `aes()`)* | color = "orange" | 1 |
 #| **Non-Aesthetic 2** *(outside `aes()`)* | alpha = 0.5 | 2 |
-#| **Non-Aesthetic 3** *(outside `aes()`)* | size = 1 | 2 |
-#| **Non-Aesthetic 4** *(outside `aes()`)* | | |
-#| **Non-Aesthetic 5** *(outside `aes()`)* | | |
-#| **Non-Aesthetic 6** *(outside `aes()`)* | | |
-#| **Custom Scale 1** | | |
-#| **Custom Scale 2** | | |
+#| **Non-Aesthetic 3** *(outside `aes()`)* | size = 2 | 2 |
+#| **Non-Aesthetic 4** *(outside `aes()`)* | width = 0.7 | 4 |
+#| **Non-Aesthetic 5** *(outside `aes()`)* | shape = 17 | 2 |
+#| **Non-Aesthetic 6** *(outside `aes()`)* | linetype = "dashed" | 2 |
+#| **Custom Scale 1** | scale_y_continuous(limits = c(0, NA)) | 1 |
+#| **Custom Scale 2** | labels = scales::label_number() | 3 |
 ```
+
+## Visualization 1: Number of fires per year in California
 
 ```{r}
 library(tidyverse)
@@ -50,7 +59,9 @@ ggplot(fires_by_year,
   geom_point() +
   ggrepel::geom_text_repel(aes(label = n_fires)) +
   scale_y_continuous(limits = c(0, NA)) +
-  labs(title = "Number of Fires per Year",
+  labs(title = "Fires on the rise in California",
+       subtitle = "Number of Fires per Year",
+       caption = "Source: California Fire and Resource Assessment Program",
        x = "Year",
        y = "Number of Fires") +
   theme_minimal()
@@ -58,6 +69,8 @@ ggplot(fires_by_year,
 ```
 
 Over time, the number of fires has fluctuated. However, since the year 2000, the number of fires has grown dramatically, reaching an all-time maximum of 609 fires in 2017. By viewing ["The long term"](https://www.latimes.com/california/story/2022-01-08/charts-show-why-california-recent-rain-wont-end-drought) from The LA Times, it is evident that these fire trends are essentially lagged by a year from correlated drought conditions. When examining the incidence of fire with drought conditions, it can be inferred that there should be proactive fire mitigation strategies following high drought years, such as controlled burns and water rationing.
+
+## Visualization 2: Number of acres burned per year in California
 
 ```{r}
 # Plotting the changes in number of acres burned per year
@@ -68,23 +81,28 @@ acres_per_year <- fires |>
 
 ggplot(acres_per_year,
        aes(x = year_, y = acres)) +
-  geom_point(alpha = 0.5,
-             color = "#FF69B4",
-             size = 1) +
+  geom_point(aes(color = acres),
+             alpha = 0.5,
+             size = 2,
+             shape = 17) +
   geom_smooth(method = "loess",
               se = TRUE,
               color = "darkred",
-              fill = "orange") +
+              fill = "orange",
+              linetype = "dashed") +
   scale_y_continuous(labels = scales::comma) +
-  labs(title = "Acres Burned per Year",
+  labs(title = "Natural Resource Degradation Rapidly Increasing",
+       subtitle = "Acres Burned per Year",
+       caption = "Source: California Fire and Resource Assessment Program",
        x = "Year",
        y = "Acres Burned") +
   theme_minimal()
 
 ```
 
-Over time, not just the number of fires, but also the acreage burned has increased dramatically. While the previous visualization could be influenced by house-fires or other small fires which do not have a significant natural impact, this visualization emphasizes that natural destruction is also accelerating. Utilizing a Loess method instead of a linear model allows for a visual representation of the rate, instead of a simple line of best fit. This shows how, not only is destruction increasing, but that it is increasing at an increasing rate. 
+Over time, not just the number of fires, but also the acreage burned has increased dramatically. While the previous visualization could be influenced by house-fires or other small fires which do not have a significant natural impact, this visualization emphasizes that natural destruction is also accelerating. Utilizing a Loess method instead of a linear model allows for a visual representation of the rate, instead of a simple line of best fit. This shows how, not only is destruction increasing, but that it is increasing at an increasing rate.
 
+## Visualization 3: Total historical acres burned in California by cause
 
 ```{r}
 fires_by_cause <- fires |>
@@ -117,51 +135,31 @@ ggplot(fires_by_cause,
   geom_col(fill = "orange") +
   scale_x_continuous(labels = scales::label_number()) +
   labs(title = "Total Acres Burned by Cause",
+       subtitle = "Historical Data",
+       caption = "Source: California Fire and Resource Assessment Program",
        x = "Acres Burned",
        y = NULL) +
   theme_minimal()
 
 ```
 
-By utilizing the [Fire History Data Dictionary](https://34c031f8-c9fd-4018-8c5a-4159cdff6b0d-cdn-endpoint.azureedge.net/-/media/calfire-website/what-we-do/fire-resource-assessment-program---frap/historic-fire-perimeters-data-dictionary.pdf?rev=4c13140f376d4a7782722338cf5b13ef&hash=E6392C1F2A65CA13AE2B4DF4FBE3AAB4), we are able to label the fire causes. So many fires being labeled as unknown/unidentified and miscellaneous limits inferences and policy recommendations that could be made. Perhaps, more investments are needed in fire investigation. Of known causes, campfires and equipment use rank in the top 5. California could possibly preserve its wilderness by limiting campfires and instituting more stringent operating standards for operating equipment; however, without more information as to the kind of equipment further conclusions are unclear.  
+By utilizing the [Fire History Data Dictionary](https://34c031f8-c9fd-4018-8c5a-4159cdff6b0d-cdn-endpoint.azureedge.net/-/media/calfire-website/what-we-do/fire-resource-assessment-program---frap/historic-fire-perimeters-data-dictionary.pdf?rev=4c13140f376d4a7782722338cf5b13ef&hash=E6392C1F2A65CA13AE2B4DF4FBE3AAB4), we are able to label the fire causes. So many fires being labeled as unknown/unidentified and miscellaneous limits inferences and policy recommendations that could be made. Perhaps, more investments are needed in fire investigation. Of known causes, campfires and equipment use rank in the top 5. California could possibly preserve its wilderness by limiting campfires and instituting more stringent operating standards for operating equipment; however, without more information as to the kind of equipment further conclusions are unclear.
 
-
-
-
-
-
-
-1: Number of fires/year -> line
-2: Structures destroyed/year -> bar; facet wrap by cause
-3: acres burned by fire type
-4: 
-
-
-
-
-
-
-
-
-
-
-## Quarto
-
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
-
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
-
+## Visualization 4: Fires by Month in California
 ```{r}
-1 + 1
+fires <- fires |>
+  mutate(month = month(as.Date(alarm_date), label = TRUE))
+
+ggplot(filter(fires, !is.na(month)),
+       aes(x = month, fill = month)) +
+  geom_bar(width = 0.7,
+           show.legend = FALSE) +
+  labs(title = "Fire Seasonality in California",
+       subtitle = "Number of Fires by Month Started",
+       caption = "Source: California Fire and Resource Assessment Program",
+       x = "Month",
+       y = "Number of Fires") +
+  theme_minimal()
 ```
 
-You can add options to executable code like this
-
-```{r}
-#| echo: false
-2 * 2
-```
-
-The `echo: false` option disables the printing of code (only output is displayed).
+By highlighting the seasonality of California's fires, governments and fire units can make decisions about when to hire seasonal fires, when to restrict activities — such as the aforementioned campfires — and whether resources are needed outside of hot summer months. For instance, although October is not typically thought of as a dry season, there is evidently still notable fire activity, implying extended fire season constraints.
