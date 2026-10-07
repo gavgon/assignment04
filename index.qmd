@@ -14,7 +14,7 @@ editor_options:
 #| :--- | :--- | :--- |
 #| **Geom 1** | geom_line | 1 |
 #| **Geom 2** | geom_point | 1 |
-#| **Geom 3** | `geom_*()` | |
+#| **Geom 3** | geom_smooth | 2 |
 #| **Geom 4** | | |
 #| **Geom 5** | | |
 #| **Aesthetic 1** *(inside `aes()`)* | x = year | 1 |
@@ -24,8 +24,8 @@ editor_options:
 #| **Aesthetic 5** *(inside `aes()`)* | | |
 #| **Aesthetic 6** *(inside `aes()`)* | | |
 #| **Non-Aesthetic 1** *(outside `aes()`)* | color = "orange" | 1 |
-#| **Non-Aesthetic 2** *(outside `aes()`)* | | |
-#| **Non-Aesthetic 3** *(outside `aes()`)* | | |
+#| **Non-Aesthetic 2** *(outside `aes()`)* | alpha = 0.5 | 2 |
+#| **Non-Aesthetic 3** *(outside `aes()`)* | size = 1 | 2 |
 #| **Non-Aesthetic 4** *(outside `aes()`)* | | |
 #| **Non-Aesthetic 5** *(outside `aes()`)* | | |
 #| **Non-Aesthetic 6** *(outside `aes()`)* | | |
@@ -49,6 +49,7 @@ ggplot(fires_by_year,
   geom_line(color = "orange") +
   geom_point() +
   ggrepel::geom_text_repel(aes(label = n_fires)) +
+  scale_y_continuous(limits = c(0, NA)) +
   labs(title = "Number of Fires per Year",
        x = "Year",
        y = "Number of Fires") +
@@ -59,8 +60,30 @@ ggplot(fires_by_year,
 Over time, the number of fires has fluctuated. However, since the year 2000, the number of fires has grown dramatically, reaching an all-time maximum of 609 fires in 2017. By viewing ["The long term"](https://www.latimes.com/california/story/2022-01-08/charts-show-why-california-recent-rain-wont-end-drought) from The LA Times, it is evident that these fire trends are essentially lagged by a year from correlated drought conditions. When examining the incidence of fire with drought conditions, it can be inferred that there should be proactive fire mitigation strategies following high drought years, such as controlled burns and water rationing.
 
 ```{r}
+# Plotting the changes in number of acres burned per year
+acres_per_year <- fires |>
+  group_by(year_) |>
+  summarize(acres = sum(gis_acres))
+
+
+ggplot(acres_per_year,
+       aes(x = year_, y = acres)) +
+  geom_point(alpha = 0.5,
+             color = "#FF69B4",
+             size = 1) +
+  geom_smooth(method = "loess",
+              se = TRUE,
+              color = "darkred",
+              fill = "orange") +
+  scale_y_continuous(labels = scales::comma) +
+  labs(title = "Acres Burned per Year",
+       x = "Year",
+       y = "Acres Burned") +
+  theme_minimal()
+
 ```
 
+Over time, not just the number of fires, but also the acreage burned has increased dramatically. While the previous visualization could be influenced by house-fires or other small fires which do not have a significant natural impact, this visualization emphasizes that natural destruction is also accelerating. Utilizing a Loess method instead of a linear model allows for a visual representation of the rate, instead of a simple line of best fit. This shows how, not only is destruction increasing, but that it is increasing at an increasing rate. 
 
 
 
@@ -76,8 +99,8 @@ Over time, the number of fires has fluctuated. However, since the year 2000, the
 
 1: Number of fires/year -> line
 2: Structures destroyed/year -> bar; facet wrap by cause
-3: 
-4:
+3: acres burned by fire type
+4: 
 
 
 
