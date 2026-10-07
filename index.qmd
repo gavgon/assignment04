@@ -86,10 +86,44 @@ ggplot(acres_per_year,
 Over time, not just the number of fires, but also the acreage burned has increased dramatically. While the previous visualization could be influenced by house-fires or other small fires which do not have a significant natural impact, this visualization emphasizes that natural destruction is also accelerating. Utilizing a Loess method instead of a linear model allows for a visual representation of the rate, instead of a simple line of best fit. This shows how, not only is destruction increasing, but that it is increasing at an increasing rate. 
 
 
+```{r}
+fires_by_cause <- fires |>
+  mutate(cause_label = case_when(
+    cause == 1  ~ "Lightning",
+    cause == 2  ~ "Equipment Use",
+    cause == 3  ~ "Smoking",
+    cause == 4  ~ "Campfire",
+    cause == 5  ~ "Debris",
+    cause == 6  ~ "Railroad",
+    cause == 7  ~ "Arson",
+    cause == 8  ~ "Playing with Fire",
+    cause == 9  ~ "Miscellaneous",
+    cause == 10 ~ "Vehicle",
+    cause == 11 ~ "Power Line",
+    cause == 12 ~ "Firefighter Training",
+    cause == 13 ~ "Non-Firefighter Training",
+    cause == 14 ~ "Unknown/Unidentified",
+    cause == 15 ~ "Structure",
+    cause == 16 ~ "Aircraft",
+    cause == 18 ~ "Escaped Prescribed Burn",
+    cause == 19 ~ "Illegal Campfire",
+    TRUE        ~ "Unknown/Unidentified"
+  )) |>
+  group_by(cause_label) |>
+  summarize(acres = sum(gis_acres, na.rm = TRUE))
 
+ggplot(fires_by_cause,
+       aes(x = acres, y = reorder(cause_label, acres))) +
+  geom_col(fill = "orange") +
+  scale_x_continuous(labels = scales::label_number()) +
+  labs(title = "Total Acres Burned by Cause",
+       x = "Acres Burned",
+       y = NULL) +
+  theme_minimal()
 
+```
 
-
+By utilizing the [Fire History Data Dictionary](https://34c031f8-c9fd-4018-8c5a-4159cdff6b0d-cdn-endpoint.azureedge.net/-/media/calfire-website/what-we-do/fire-resource-assessment-program---frap/historic-fire-perimeters-data-dictionary.pdf?rev=4c13140f376d4a7782722338cf5b13ef&hash=E6392C1F2A65CA13AE2B4DF4FBE3AAB4), we are able to label the fire causes. So many fires being labeled as unknown/unidentified and miscellaneous limits inferences and policy recommendations that could be made. Perhaps, more investments are needed in fire investigation. Of known causes, campfires and equipment use rank in the top 5. California could possibly preserve its wilderness by limiting campfires and instituting more stringent operating standards for operating equipment; however, without more information as to the kind of equipment further conclusions are unclear.  
 
 
 
